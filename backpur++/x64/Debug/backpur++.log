@@ -1,0 +1,3 @@
+﻿  main.cpp
+C:\Users\dhima\Desktop\backpur++\backpur++\main.cpp(46,34): warning C4101: 'ex': unreferenced local variable
+  backpur++.vcxproj -> C:\Users\dhima\Desktop\backpur++\x64\Debug\backpur++.exe
