@@ -23,6 +23,11 @@ using namespace std;
 namespace fs = std::filesystem;
 HHOOK g_hook;
 
+/* Check file exists or not*/
+bool fileExists(const std::string& filename) {
+    std::ifstream file(filename, std::ios::in);
+    return file.is_open(); // Check if the file was opened successfully
+}
 
 /*---------------------------------String Converter---------------------------------*/
 std::wstring stringToWstring(const std::string& str) {
@@ -106,6 +111,7 @@ void data_logger(const std::string& file_name, const std::string& data_to_add) {
     }
     else {
         std::cerr << "Error opening file data.txt" << std::endl;
+        message_box("Error", "Error opening file data.txt");
     }
 }
 /*---------------------------------String Converter---------------------------------*/
@@ -120,10 +126,7 @@ std::string wstringToString(const std::wstring& wide_string) {
     return narrow_string;
 }
 
-void showNotification(const std::wstring& title, const std::wstring& message) {
-    MessageBoxW(NULL, message.c_str(), title.c_str(), MB_OK | MB_ICONINFORMATION);
-}
-
+/*---------------------------------Get Current Time---------------------------------*/
 std::string getCurrentTime() {
     auto currentTime = std::chrono::system_clock::now();
     std::time_t time = std::chrono::system_clock::to_time_t(currentTime);
@@ -145,9 +148,7 @@ void copy(const std::string& sourceFolder, const std::string& destinationFolder,
         fs::copy(sourceFolder, destinationFolder +"\\" + folderName, fs::copy_options::recursive | fs::copy_options::overwrite_existing);
     }
     catch (exception ex) {
-        std::wstring title = L"Error";
-        std::wstring message = L"Failed to copy";
-        showNotification(title, message);
+        message_box("Error", "Failed to copy");
     }
 }
 
@@ -188,6 +189,7 @@ void backuper() {
         }
         catch (const std::filesystem::filesystem_error& e) {
             std::cerr << "Error creating folder: " << e.what() << std::endl;
+            message_box("Error", "Error creating folder");
         }
     }
     std::wstring folder = std::wstring(folderName.begin(), folderName.end());
@@ -205,6 +207,7 @@ void backuper() {
         }
         else {
             std::cout << "Failed to create folder. Error code: " << error << std::endl;
+            message_box("Error", "Failed to create folder");
         }
     }
 }
@@ -240,25 +243,29 @@ LRESULT CALLBACK KeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
             else if (pKeyboardStruct->vkCode == VK_OEM_3)
             {
                // SHIFT + `
-               backuper();
+                if (!fileExists("data.txt")) {
+                    message_box("Select Folder", "Select the folder you want to backup");
+                    std::string converted_data = wstringToString(folder_selector());
+                    data_logger("data.txt", converted_data);
+                }
+                else
+                {
+                    backuper();
+                }
             }
         }
     }
     return CallNextHookEx(g_hook, nCode, wParam, lParam);
 }
 
-/* Check file exists or not*/
-bool fileExists(const std::string& filename) {
-    std::ifstream file(filename, std::ios::in);
-    return file.is_open(); // Check if the file was opened successfully
-}
-
+/*MAIN FUNCTION*/
 int main()
 {
     std::cerr << "'Ctrl + Shift + P' for selecting folder for backup" << std::endl;
     std::cerr << "'Ctrl + Shift + L' for saving location for backup" << std::endl;
     std::cerr << "'Shift + ~' for creating backup" << std::endl;
     std::cerr << "'Win + Esc' for Exit" << std::endl;
+    std::cerr << std::endl << std::endl;
 
     if (!fileExists("data.txt")) {
         message_box("Select Folder", "Select the folder you want to backup");
