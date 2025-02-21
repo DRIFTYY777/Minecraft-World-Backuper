@@ -16,7 +16,6 @@
 #include <fstream>
 #include <locale>
 #include <codecvt>
-#include <Windows.h>
 
 //
 using namespace std;
